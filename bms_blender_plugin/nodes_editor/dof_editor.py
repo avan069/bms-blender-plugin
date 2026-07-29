@@ -117,9 +117,12 @@ def cleanup_deleted_dof_nodes(scene):
                     node.parent_dof = None
 
                 elif get_bml_node_type(node) == BlenderEditorNodeType.SOLVER:
-                    # Clear any stale object references on solver nodes
-                    for attr in ("solver_rot_dof", "solver_trans_dof", "solver_base_dof",
-                                 "solver_hinge_dof", "solver_target"):
+                    # Clear any stale object references on solver nodes.
+                    # Each solver node declares get_object_reference_attrs() to advertise
+                    # which of its attributes hold scene object PointerProperties.
+                    if not hasattr(node, "get_object_reference_attrs"):
+                        continue
+                    for attr in node.get_object_reference_attrs():
                         obj_ref = getattr(node, attr, None)
                         if obj_ref and _is_object_deleted(obj_ref, scene):
                             try:

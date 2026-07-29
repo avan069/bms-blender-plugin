@@ -53,6 +53,10 @@ class NodeOleoSolver(DofBaseNode):
     solver_rest_length: FloatProperty(name="Rest Length", default=1.0, min=0.0001)
     solver_stroke_length: FloatProperty(name="Stroke Length", default=1.0, min=0.0001)
 
+    def get_object_reference_attrs(self):
+        """Returns the names of all PointerProperty attributes that hold scene object references."""
+        return ("solver_rot_dof", "solver_trans_dof", "solver_target")
+
     def init(self, context):
         self.bml_node_type = str(BlenderEditorNodeType.SOLVER)
         self.width = 300
@@ -174,8 +178,3 @@ def unregister():
     unsubscribe_node(NodeOleoSolver)
     bpy.utils.unregister_class(NodeOleoSolver)
     bpy.utils.unregister_class(InferOleoLengths)
-
-
-bpy.types.Node.solver_trans_dof = bpy.props.PointerProperty(name="Translation DOF", type=bpy.types.Object)
-bpy.types.Node.solver_rest_length = bpy.props.FloatProperty(name="Rest Length", default=1.0, min=0.0001)
-bpy.types.Node.solver_stroke_length = bpy.props.FloatProperty(name="Stroke Length", default=1.0, min=0.0001)

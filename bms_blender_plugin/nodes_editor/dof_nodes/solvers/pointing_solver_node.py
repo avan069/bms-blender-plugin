@@ -28,6 +28,10 @@ class NodePointingSolver(DofBaseNode):
     solver_rot_dof: PointerProperty(name="Rotation DOF", type=bpy.types.Object)
     solver_target: PointerProperty(name="Target", type=bpy.types.Object)
 
+    def get_object_reference_attrs(self):
+        """Returns the names of all PointerProperty attributes that hold scene object references."""
+        return ("solver_rot_dof", "solver_target")
+
     def init(self, context):
         self.bml_node_type = str(BlenderEditorNodeType.SOLVER)
         self.width = 300
@@ -35,7 +39,6 @@ class NodePointingSolver(DofBaseNode):
     def draw_buttons(self, context, layout):
         layout.prop(self, "solver_rot_dof")
         layout.prop(self, "solver_target")
-
         if self.solver_rot_dof and self.solver_target:
             dof_loc = self.solver_rot_dof.matrix_world.to_translation()
             target_loc = self.solver_target.matrix_world.to_translation()
@@ -98,7 +101,3 @@ def register():
 def unregister():
     unsubscribe_node(NodePointingSolver)
     bpy.utils.unregister_class(NodePointingSolver)
-
-
-bpy.types.Node.solver_rot_dof = bpy.props.PointerProperty(name="Rotation DOF", type=bpy.types.Object)
-bpy.types.Node.solver_target = bpy.props.PointerProperty(name="Target", type=bpy.types.Object)

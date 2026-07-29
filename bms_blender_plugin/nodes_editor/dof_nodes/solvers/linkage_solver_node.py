@@ -91,6 +91,10 @@ class NodeLinkageSolver(DofBaseNode):
     solver_l2: FloatProperty(name="L2 (arm 2 length)", default=1.0, min=0.0001)
     solver_elbow_mode: EnumProperty(name="Elbow Mode", items=_ELBOW_ITEMS, default="UP")
 
+    def get_object_reference_attrs(self):
+        """Returns the names of all PointerProperty attributes that hold scene object references."""
+        return ("solver_base_dof", "solver_hinge_dof", "solver_target")
+
     def init(self, context):
         self.bml_node_type = str(BlenderEditorNodeType.SOLVER)
         self.width = 300
@@ -222,12 +226,3 @@ def unregister():
     unsubscribe_node(NodeLinkageSolver)
     bpy.utils.unregister_class(NodeLinkageSolver)
     bpy.utils.unregister_class(InferLinkageLengths)
-
-
-bpy.types.Node.solver_base_dof = bpy.props.PointerProperty(name="Base DOF", type=bpy.types.Object)
-bpy.types.Node.solver_hinge_dof = bpy.props.PointerProperty(name="Hinge DOF", type=bpy.types.Object)
-bpy.types.Node.solver_l1 = bpy.props.FloatProperty(name="L1 (arm 1 length)", default=1.0, min=0.0001)
-bpy.types.Node.solver_l2 = bpy.props.FloatProperty(name="L2 (arm 2 length)", default=1.0, min=0.0001)
-bpy.types.Node.solver_elbow_mode = bpy.props.EnumProperty(
-    name="Elbow Mode", items=_ELBOW_ITEMS, default="UP"
-)
