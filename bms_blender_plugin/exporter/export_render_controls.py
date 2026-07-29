@@ -126,6 +126,12 @@ def get_render_control_nodes(node_start_index=0):
             else:
                 result_id = render_control_node.result.type.argument_id
 
+        elif get_bml_node_type(render_control_node) == BlenderEditorNodeType.SOLVER:
+            # Solver nodes generate their own RC chains via generate_rc_nodes()
+            solver_rc_nodes = render_control_node.generate_rc_nodes(len(bml_nodes) + node_start_index)
+            bml_nodes.extend(solver_rc_nodes)
+            continue
+
         rc_math = RenderControlMath(
             math_op=math_op,
             arguments=arguments,
