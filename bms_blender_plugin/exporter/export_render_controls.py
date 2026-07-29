@@ -31,7 +31,7 @@ def get_render_controls():
         if get_bml_node_tree_type(node_tree) == BlenderNodeTreeType.DOF_TREE:
             dof_node_trees += 1
             if dof_node_trees > 1:
-                raise RenderControlExportError("More than one Dof Node Tree found, aborting")
+                raise RenderControlExportError("More than one DOF Node Tree found, aborting")
 
             # make sure that the links of the tree are correct
             update_node_links(node_tree)
