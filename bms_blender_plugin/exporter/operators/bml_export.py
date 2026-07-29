@@ -149,6 +149,7 @@ class ExportBML(Operator, ExportHelper):
         file_directory = os.path.dirname(self.filepath)
         file_prefix = (os.path.basename(self.filepath)).replace(" ", "_")
         blender_export_settings = context.scene.bml_export_settings
+        addon_key = __package__.split(".")[0]
 
         try:
             export_settings = ExportSettings(
@@ -187,9 +188,7 @@ class ExportBML(Operator, ExportHelper):
             traceback.print_exc()
             return {"CANCELLED"}
 
-        editor_path = context.preferences.addons[
-            "bms_blender_plugin"
-        ].preferences.editor_path
+        editor_path = context.preferences.addons[addon_key].preferences.editor_path
         if blender_export_settings.open_editor and editor_path and len(bml_file_list) > 0:
             subprocess.Popen([editor_path, bml_file_list[0]])
 
@@ -208,9 +207,8 @@ class ExportBML(Operator, ExportHelper):
         return super().invoke(context, event)
 
     def draw(self, context):
-        editor_path = context.preferences.addons[
-            "bms_blender_plugin"
-        ].preferences.editor_path
+        addon_key = __package__.split(".")[0]
+        editor_path = context.preferences.addons[addon_key].preferences.editor_path
         layout = self.layout
 
         export_file_list = []
