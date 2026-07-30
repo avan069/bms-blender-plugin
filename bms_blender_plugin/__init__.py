@@ -3,7 +3,10 @@ import sys
 import os
 from itertools import groupby
 
-from bms_blender_plugin.ext.blender_dds_addon.directx.texconv import unload_texconv
+if __name__ != "bms_blender_plugin":
+    sys.modules["bms_blender_plugin"] = sys.modules[__name__]
+
+from .ext.blender_dds_addon.directx.texconv import unload_texconv
 
 bl_info = {
     "name": "Falcon BMS Plugin",
