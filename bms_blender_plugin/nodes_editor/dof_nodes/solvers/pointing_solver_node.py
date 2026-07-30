@@ -3,10 +3,12 @@ import math
 import bpy
 from bpy.props import PointerProperty
 
-from bms_blender_plugin.common.blender_types import BlenderEditorNodeType
-from bms_blender_plugin.common.bml_structs import MathOp, ArgType, RenderControlMath, RenderControlNode
+from bms_blender_plugin.common.blender_types import BlenderEditorNodeType, BlenderNodeType
+from bms_blender_plugin.common.bml_structs import MathOp, ArgType, RenderControlMath, RenderControlNode, DofType
 from bms_blender_plugin.common.resolve_ids import resolve_dof_number
+from bms_blender_plugin.common.util import get_parent_dof_or_switch, get_bml_type
 from bms_blender_plugin.nodes_editor.dof_base_node import DofBaseNode, subscribe_node, unsubscribe_node
+from bms_blender_plugin.nodes_editor.dof_nodes.scratchpad import Scratchpad
 
 
 class NodePointingSolver(DofBaseNode):
@@ -61,7 +63,7 @@ class NodePointingSolver(DofBaseNode):
         self.solver_rot_dof.dof_input = angle
 
     def generate_rc_nodes(self, node_start_index):
-        """Generate RC nodes for export. Bakes the current angle as a constant SET node."""
+        """Generate RC nodes for export."""
         if not self.solver_rot_dof or not self.solver_target:
             return []
 
@@ -76,6 +78,42 @@ class NodePointingSolver(DofBaseNode):
         dx = target_loc.x - dof_loc.x
         dy = target_loc.y - dof_loc.y
         angle = math.atan2(dy, dx)
+
+        target_parent = get_parent_dof_or_switch(self.solver_target.parent)
+        if target_parent and get_parent_dof_or_switch(self.solver_rot_dof.parent) != target_parent:
+            if get_bml_type(target_parent) == BlenderNodeType.DOF and target_parent.dof_type == DofType.ROTATE.name:
+                source_dof_number = resolve_dof_number(target_parent)
+                if source_dof_number is not None and source_dof_number != dof_number:
+                    source_value = float(getattr(target_parent, "dof_input", 0.0))
+                    offset = float(angle - source_value)
+                    if abs(offset) < 1e-6:
+                        rc_math = RenderControlMath(
+                            math_op=MathOp.SET,
+                            arguments=[(ArgType.DOF_ID, source_dof_number)],
+                            result_type=ArgType.DOF_ID,
+                            result_id=dof_number,
+                        )
+                        rc = RenderControlNode(node_start_index)
+                        rc.rc_math = rc_math
+                        return [rc]
+
+                    scratch_var = Scratchpad.alloc()
+                    rc_add = RenderControlNode(node_start_index)
+                    rc_add.rc_math = RenderControlMath(
+                        math_op=MathOp.ADD,
+                        arguments=[(ArgType.DOF_ID, source_dof_number), (ArgType.FLOAT, offset)],
+                        result_type=ArgType.SCRATCH_VARIABLE_ID,
+                        result_id=scratch_var,
+                    )
+
+                    rc_set = RenderControlNode(node_start_index + 1)
+                    rc_set.rc_math = RenderControlMath(
+                        math_op=MathOp.SET,
+                        arguments=[(ArgType.SCRATCH_VARIABLE_ID, scratch_var)],
+                        result_type=ArgType.DOF_ID,
+                        result_id=dof_number,
+                    )
+                    return [rc_add, rc_set]
 
         print(
             f"WARNING: Pointing Solver '{self.name}': target '{self.solver_target.name}' is treated as static. "
